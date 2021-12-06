@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shop_app/providers/cart_provider.dart';
+import 'package:shop_app/providers/order_provider.dart';
+import 'package:shop_app/widgets/cart_item.dart' as cartItemWidget;
 
 class CartScreen extends StatelessWidget {
   static const routeName = '/cart';
@@ -21,26 +23,43 @@ class CartScreen extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
-                  Text(
+                  const Text(
                     'Total',
                     style: TextStyle(
                       fontSize: 20,
                      ),
                   ),
-                  Spacer(),
-                  SizedBox(width: 10,),
+                  const Spacer(),
+                  const SizedBox(width: 10,),
                   Chip(
-                    label: Text('\$${cart.totalAmount}', style: TextStyle(color: Theme.of(context).primaryTextTheme.headline5!.color),),
+                    label: Text('\$${cart.totalAmount.toStringAsFixed(2)}', style: TextStyle(color: Theme.of(context).primaryTextTheme.headline5!.color),),
                     backgroundColor: Theme.of(context).colorScheme.primary,
                   ),
                   TextButton(
-                      onPressed: (){},
+                      onPressed: (){
+                        Provider.of<Orders>(context, listen: false).
+                        addOrder(cart.items.values.toList(), cart.totalAmount);
+                        cart.clearCart();
+                      },
                       child: Text('Order Now'),
                   )
                 ],
               ),
             ),
           ),
+          const SizedBox(height: 10,),
+          Expanded(
+              child: ListView.builder(
+                  itemCount: cart.getItemCount,
+                  itemBuilder: (context, index) => cartItemWidget.CartItem(
+                      id: cart.items.values.toList()[index].id,
+                      productId: cart.items.keys.toList()[index],
+                      title: cart.items.values.toList()[index].title,
+                      quantity: cart.items.values.toList()[index].quantity,
+                      price: cart.items.values.toList()[index].price,
+                  )
+              )
+          )
         ],
       ),
     );
