@@ -7,38 +7,38 @@ import 'package:http/http.dart' as http;
 
 class Products with ChangeNotifier {
   List<Product> _items = [
-    Product(
-      id: 'p1',
-      title: 'Red Shirt',
-      description: 'A red shirt - it is pretty red!',
-      price: 29.99,
-      imageUrl:
-      'https://cdn.pixabay.com/photo/2016/10/02/22/17/red-t-shirt-1710578_1280.jpg',
-    ),
-    Product(
-      id: 'p2',
-      title: 'Trousers',
-      description: 'A nice pair of trousers.',
-      price: 59.99,
-      imageUrl:
-      'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/Trousers%2C_dress_%28AM_1960.022-8%29.jpg/512px-Trousers%2C_dress_%28AM_1960.022-8%29.jpg',
-    ),
-    Product(
-      id: 'p3',
-      title: 'Yellow Scarf',
-      description: 'Warm and cozy - exactly what you need for the winter.',
-      price: 19.99,
-      imageUrl:
-      'https://live.staticflickr.com/4043/4438260868_cc79b3369d_z.jpg',
-    ),
-    Product(
-      id: 'p4',
-      title: 'A Pan',
-      description: 'Prepare any meal you want.',
-      price: 49.99,
-      imageUrl:
-      'https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Cast-Iron-Pan.jpg/1024px-Cast-Iron-Pan.jpg',
-    ),
+    // Product(
+    //   id: 'p1',
+    //   title: 'Red Shirt',
+    //   description: 'A red shirt - it is pretty red!',
+    //   price: 29.99,
+    //   imageUrl:
+    //   'https://cdn.pixabay.com/photo/2016/10/02/22/17/red-t-shirt-1710578_1280.jpg',
+    // ),
+    // Product(
+    //   id: 'p2',
+    //   title: 'Trousers',
+    //   description: 'A nice pair of trousers.',
+    //   price: 59.99,
+    //   imageUrl:
+    //   'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/Trousers%2C_dress_%28AM_1960.022-8%29.jpg/512px-Trousers%2C_dress_%28AM_1960.022-8%29.jpg',
+    // ),
+    // Product(
+    //   id: 'p3',
+    //   title: 'Yellow Scarf',
+    //   description: 'Warm and cozy - exactly what you need for the winter.',
+    //   price: 19.99,
+    //   imageUrl:
+    //   'https://live.staticflickr.com/4043/4438260868_cc79b3369d_z.jpg',
+    // ),
+    // Product(
+    //   id: 'p4',
+    //   title: 'A Pan',
+    //   description: 'Prepare any meal you want.',
+    //   price: 49.99,
+    //   imageUrl:
+    //   'https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Cast-Iron-Pan.jpg/1024px-Cast-Iron-Pan.jpg',
+    // ),
   ];
 
   var _showFavorites = false;
@@ -68,12 +68,37 @@ class Products with ChangeNotifier {
     return _items.firstWhere((element) => element.id == id);
   }
 
+  Future<void> fetchProducts() async {
+    final url = Uri.parse(
+        "https://flutter-db-f5cbb-default-rtdb.asia-southeast1.firebasedatabase.app/products.json");
+    try {
+      final response = await http.get(url);
+      final extractedData = json.decode(response.body) as Map<String, dynamic>;
+      if(extractedData == 'null') {
+        return;
+      }
+      final List<Product> loadedProducts = [];
+      extractedData.forEach((prodId, prodData) {
+        loadedProducts.add(Product(
+          id: prodId,
+          title: prodData['title'],
+          description: prodData['description'],
+          imageUrl: prodData['imageUrl'],
+          price: prodData['price'],
+        ));
+      });
+      _items = loadedProducts;
+      notifyListeners();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   Future<void> addProduct(Product product) async {
     final url = Uri.parse(
-        "https://flutter-db-f5cbb-default-rtdb.asia-southeast1.firebasedatabase.app/products.ssss");
+        "https://flutter-db-f5cbb-default-rtdb.asia-southeast1.firebasedatabase.app/products.json");
     try {
-      final response = await http
-          .post(url,
+      final response = await http.post(url,
           body: json.encode({
             'title': product.title,
             'description': product.description,
@@ -90,29 +115,59 @@ class Products with ChangeNotifier {
       );
       _items.add(newProduct);
       notifyListeners();
-    }catch(e){
+    } catch (e) {
       print(e);
       rethrow;
     }
 
-
     //returning inside function of a function will not return to the main function
     // Future.value()
-
   }
 
-  void updateProduct(String id, Product newProduct) {
-    final productIndex = _items.indexWhere((p) => p.id == id);
-    if (productIndex >= 0) {
-      _items[productIndex] = newProduct;
-      notifyListeners();
-    } else {
-      print('...');
+  Future<void> updateProduct(String id, Product newProduct) async {
+    try {
+      final url = Uri.parse(
+          "https://flutter-db-f5cbb-default-rtdb.asia-southeast1.firebasedatabase.app/products/$id.json");
+      await http.patch(url,
+          body: json.encode({
+            'title': newProduct.title,
+            'price': newProduct.price,
+            'imageUrl': newProduct.imageUrl,
+            'description': newProduct.description
+          }));
+
+      final productIndex = _items.indexWhere((p) => p.id == id);
+      if (productIndex >= 0) {
+        _items[productIndex] = newProduct;
+        notifyListeners();
+      } else {
+        print('...');
+      }
+    } catch (e) {
+      rethrow;
     }
   }
 
-  void deleteProduct(String id) {
-    _items.removeWhere((p) => p.id == id);
-    notifyListeners();
+  Future<void> deleteProduct(String id) async {
+    try {
+      final url = Uri.parse(
+          "https://flutter-db-f5cbb-default-rtdb.asia-southeast1.firebasedatabase.app/products/$id.json");
+      final existingProductIndex = _items.indexWhere((prod) => prod.id == id);
+      Product? existingProduct = _items[existingProductIndex];
+      _items.removeAt(existingProductIndex);
+      notifyListeners();
+
+      //I'm interested only if there's an error
+      final response = await http.delete(url);
+      if (response.statusCode >= 400) {
+        _items.insert(existingProductIndex, existingProduct);
+        notifyListeners();
+        throw HttpException('Could not delete product');
+      }
+      // throw is like a return and the code would not reach here if above if-block executes
+      existingProduct = null;
+    } catch (e) {
+      rethrow;
+    }
   }
 }
