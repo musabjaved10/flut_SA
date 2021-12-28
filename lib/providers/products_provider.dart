@@ -73,6 +73,9 @@ class Products with ChangeNotifier {
         "https://flutter-db-f5cbb-default-rtdb.asia-southeast1.firebasedatabase.app/products.json");
     try {
       final response = await http.get(url);
+      if(response.body == 'null'){
+        return;
+      }
       final extractedData = json.decode(response.body) as Map<String, dynamic>;
       if(extractedData == 'null') {
         return;

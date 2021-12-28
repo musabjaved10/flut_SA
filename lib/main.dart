@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:shop_app/providers/auth_provider.dart';
 import 'package:shop_app/providers/cart_provider.dart';
 import 'package:shop_app/providers/order_provider.dart';
 import 'package:shop_app/providers/products_provider.dart';
+import 'package:shop_app/screens/auth_screen.dart';
 import 'package:shop_app/screens/cart_screen.dart';
 import 'package:shop_app/screens/edit_product_screen.dart';
 import 'package:shop_app/screens/orders_screen.dart';
@@ -22,31 +24,27 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(
-            create: (BuildContext context) => Products()
-        ),
-        ChangeNotifierProvider(
-            create: (BuildContext context) => Cart()
-        ),
-        ChangeNotifierProvider(
-            create: (BuildContext context) => Orders()
-        ),
-
+        ChangeNotifierProvider(create: (BuildContext context) => Auth()),
+        ChangeNotifierProvider(create: (BuildContext context) => Products()),
+        ChangeNotifierProvider(create: (BuildContext context) => Cart()),
+        ChangeNotifierProvider(create: (BuildContext context) => Orders()),
       ],
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        title: 'Flutter Demo',
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSwatch(primarySwatch: Colors.purple).copyWith(secondary: Colors.deepOrange)
+      child: Consumer<Auth>(
+        builder: (context, authData, child) => MaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: 'Flutter Demo',
+          theme: ThemeData(
+              colorScheme: ColorScheme.fromSwatch(primarySwatch: Colors.purple)
+                  .copyWith(secondary: Colors.deepOrange)),
+          home: authData.isAuth ? ProductOverViewScreen() : AuthScreen(),
+          routes: {
+            ProductDetailsScreen.routeName: (context) => ProductDetailsScreen(),
+            CartScreen.routeName: (context) => CartScreen(),
+            OrderScreen.routeName: (context) => OrderScreen(),
+            UserProductsScreen.routeName: (context) => UserProductsScreen(),
+            EditProductScreen.routeName: (context) => EditProductScreen(),
+          },
         ),
-        home: ProductOverViewScreen(),
-        routes: {
-          ProductDetailsScreen.routeName : (context) => ProductDetailsScreen(),
-          CartScreen.routeName : (context) => CartScreen(),
-          OrderScreen.routeName: (context) => OrderScreen(),
-          UserProductsScreen.routeName: (context) => UserProductsScreen(),
-          EditProductScreen.routeName: (context) => EditProductScreen(),
-        },
       ),
     );
   }
@@ -67,4 +65,3 @@ class MyHomePage extends StatelessWidget {
     );
   }
 }
-

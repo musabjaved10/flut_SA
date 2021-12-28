@@ -56,11 +56,12 @@ class Orders with ChangeNotifier {
     final url = Uri.parse(
         "https://flutter-db-f5cbb-default-rtdb.asia-southeast1.firebasedatabase.app/orders.json");
     final response = await http.get(url);
-    final List<OrderItem> loadedOrders = [];
-    final extractedData = json.decode(response.body) as Map<String, dynamic>;
-    if(extractedData == "null"){
+    if(response.body == 'null'){
       return;
     }
+    final List<OrderItem> loadedOrders = [];
+    final extractedData = json.decode(response.body) as Map<String, dynamic>;
+
     extractedData.forEach((orderId, orderData) {
       loadedOrders.add(OrderItem(
         id: orderId,
