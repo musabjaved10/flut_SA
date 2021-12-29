@@ -43,6 +43,9 @@ class Products with ChangeNotifier {
 
   var _showFavorites = false;
 
+  Products(this.authToken, this._items);
+  final String? authToken;
+
   List<Product> get items {
     // if(_showFavorites){
     //   return _items.where((element) => element.isFavourite ).toList();
@@ -64,20 +67,21 @@ class Products with ChangeNotifier {
   //   notifyListeners();
   // }
 
+
   Product findById({required String id}) {
     return _items.firstWhere((element) => element.id == id);
   }
 
   Future<void> fetchProducts() async {
     final url = Uri.parse(
-        "https://flutter-db-f5cbb-default-rtdb.asia-southeast1.firebasedatabase.app/products.json");
+        "https://flutter-db-f5cbb-default-rtdb.asia-southeast1.firebasedatabase.app/products.json?auth=$authToken");
     try {
       final response = await http.get(url);
       if(response.body == 'null'){
         return;
       }
       final extractedData = json.decode(response.body) as Map<String, dynamic>;
-      if(extractedData == 'null') {
+      if(extractedData == null) {
         return;
       }
       final List<Product> loadedProducts = [];
@@ -88,18 +92,20 @@ class Products with ChangeNotifier {
           description: prodData['description'],
           imageUrl: prodData['imageUrl'],
           price: prodData['price'],
+          isFavourite: prodData['isFavourite']
         ));
       });
       _items = loadedProducts;
       notifyListeners();
     } catch (e) {
+      print('ooops');
       rethrow;
     }
   }
 
   Future<void> addProduct(Product product) async {
     final url = Uri.parse(
-        "https://flutter-db-f5cbb-default-rtdb.asia-southeast1.firebasedatabase.app/products.json");
+        "https://flutter-db-f5cbb-default-rtdb.asia-southeast1.firebasedatabase.app/products.json?auth=$authToken");
     try {
       final response = await http.post(url,
           body: json.encode({
@@ -130,7 +136,7 @@ class Products with ChangeNotifier {
   Future<void> updateProduct(String id, Product newProduct) async {
     try {
       final url = Uri.parse(
-          "https://flutter-db-f5cbb-default-rtdb.asia-southeast1.firebasedatabase.app/products/$id.json");
+          "https://flutter-db-f5cbb-default-rtdb.asia-southeast1.firebasedatabase.app/products/$id.json?auth=$authToken");
       await http.patch(url,
           body: json.encode({
             'title': newProduct.title,
@@ -154,7 +160,7 @@ class Products with ChangeNotifier {
   Future<void> deleteProduct(String id) async {
     try {
       final url = Uri.parse(
-          "https://flutter-db-f5cbb-default-rtdb.asia-southeast1.firebasedatabase.app/products/$id.json");
+          "https://flutter-db-f5cbb-default-rtdb.asia-southeast1.firebasedatabase.app/products/$id.json?auth=$authToken");
       final existingProductIndex = _items.indexWhere((prod) => prod.id == id);
       Product? existingProduct = _items[existingProductIndex];
       _items.removeAt(existingProductIndex);
